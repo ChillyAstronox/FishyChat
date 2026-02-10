@@ -16,7 +16,7 @@ button { padding: 5px 10px; }
 <body>
 
 <h1 id="chatTitle" style="font-size: 80px; font-family: cursive;">
-    <img src="image.png" alt="Fish Chat" style="width: 220px; height: 170px;"> Fishy Chat :)
+<img src="image.png" alt="Fish Chat" style="width: 220px; height: 170px;"> Fishy Chat :)
 </h1>
 
 <div id="messages"></div>
@@ -27,18 +27,15 @@ button { padding: 5px 10px; }
 <br>
 <button id="sendBtn">Send</button>
 <button id="newChatBtn">Start New Room</button>
-<button id="refreshBtn">Refresh Messages</button>
 <br>
 <a id="chatLink" href="#" target="_blank"></a>
 
-<!-- Firebase Scripts -->
-<script type="module">
-  // Import Firebase SDK
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js";
-  import { getDatabase, ref, push, onValue, set } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-database.js";
-  import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-analytics.js";
+<!-- Firebase Compat Scripts -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 
-  // Firebase config
+<script>
+  // ---------------- Firebase Config ----------------
   const firebaseConfig = {
     apiKey: "AIzaSyCx9HdgT3orb_ToBoN_Xnnc22QKfp3yTP0",
     authDomain: "fishy-chat-60a51.firebaseapp.com",
@@ -50,12 +47,10 @@ button { padding: 5px 10px; }
     measurementId: "G-8FR6X8G9P9"
   };
 
-  // Initialize Firebase
-  const app = initializeApp(firebaseConfig);
-  const analytics = getAnalytics(app);
-  const db = getDatabase(app);
+  firebase.initializeApp(firebaseConfig);
+  const db = firebase.database();
 
-  // ----------------- Chat Setup -----------------
+  // ---------------- Chat Setup ----------------
   function generateID(length = 12) {
       const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
       let id = '';
@@ -65,7 +60,6 @@ button { padding: 5px 10px; }
       return id;
   }
 
-  // Get chat ID from hash
   let chatID = location.hash.slice(1);
   if (!chatID) {
       chatID = generateID();
@@ -81,11 +75,11 @@ button { padding: 5px 10px; }
   const textInput = document.getElementById('text');
   const imageInput = document.getElementById('image');
 
-  let messagesRef = ref(db, 'chats/' + chatID);
+  let messagesRef = db.ref('chats/' + chatID);
 
-  // Load messages in real-time
+  // ---------------- Load messages live ----------------
   function loadMessages() {
-      onValue(messagesRef, (snapshot) => {
+      messagesRef.on('value', snapshot => {
           const data = snapshot.val() || {};
           messagesDiv.innerHTML = '';
           Object.values(data).forEach(msg => {
@@ -112,7 +106,7 @@ button { padding: 5px 10px; }
       const image = imageInput.value.trim();
       if (!text && !image) return;
 
-      push(messagesRef, { title, text, image });
+      messagesRef.push({ title, text, image });
 
       titleInput.value = '';
       textInput.value = '';
@@ -123,18 +117,12 @@ button { padding: 5px 10px; }
   document.getElementById('newChatBtn').addEventListener('click', () => {
       chatID = generateID();
       location.hash = chatID;
-      messagesRef = ref(db, 'chats/' + chatID);
+      messagesRef = db.ref('chats/' + chatID);
       link.href = `#${chatID}`;
       link.textContent = `${link.href}`;
       loadMessages();
   });
 
-  // ---------------- Refresh Button ----------------
-  document.getElementById('refreshBtn').addEventListener('click', () => {
-      loadMessages();
-  });
-
 </script>
-
 </body>
 </html>
