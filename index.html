@@ -15,86 +15,126 @@ button { padding: 5px 10px; }
 </head>
 <body>
 
-<h1 id="chatTitle" style="font-size: 80px; font-family: cursive;"><img src="image.png" alt="Fish Chat" style="width: 220px; height: 170px;"> Fishy Chat :)</h1>
+<h1 id="chatTitle" style="font-size: 80px; font-family: cursive;">
+    <img src="image.png" alt="Fish Chat" style="width: 220px; height: 170px;"> Fishy Chat :)
+</h1>
+
 <div id="messages"></div>
 
 <input type="text" id="title" placeholder="Name" style="width: 200px;">
 <input type="text" id="text" placeholder="Message" style="width: 300px;">
 <input type="text" id="image" placeholder="Image URL" style="width: 200px;">
+<br>
 <button id="sendBtn">Send</button>
 <button id="newChatBtn">Start New Room</button>
+<button id="refreshBtn">Refresh Messages</button>
+<br>
 <a id="chatLink" href="#" target="_blank"></a>
 
-<script>
-function generateID(length = 12) {
-    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-    let id = '';
-    for (let i = 0; i < length; i++) {
-        id += chars.charAt(Math.floor(Math.random() * chars.length));
-    }
-    return id;
-}
+<!-- Firebase Scripts -->
+<script type="module">
+  // Import Firebase SDK
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js";
+  import { getDatabase, ref, push, onValue, set } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-database.js";
+  import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-analytics.js";
 
-// Get chat ID from hash
-let chatID = location.hash.slice(1);
-if (!chatID) {
-    chatID = generateID();
-    location.hash = chatID;
-}
+  // Firebase config
+  const firebaseConfig = {
+    apiKey: "AIzaSyCx9HdgT3orb_ToBoN_Xnnc22QKfp3yTP0",
+    authDomain: "fishy-chat-60a51.firebaseapp.com",
+    databaseURL: "https://fishy-chat-60a51-default-rtdb.firebaseio.com",
+    projectId: "fishy-chat-60a51",
+    storageBucket: "fishy-chat-60a51.firebasestorage.app",
+    messagingSenderId: "707437730841",
+    appId: "1:707437730841:web:160bc64f2782a32af79e88",
+    measurementId: "G-8FR6X8G9P9"
+  };
 
-// Set chat link
-const link = document.getElementById('chatLink');
-link.href = `#${chatID}`;
-link.textContent = `${link.href}`;
+  // Initialize Firebase
+  const app = initializeApp(firebaseConfig);
+  const analytics = getAnalytics(app);
+  const db = getDatabase(app);
 
-// Load messages
-const messagesDiv = document.getElementById('messages');
+  // ----------------- Chat Setup -----------------
+  function generateID(length = 12) {
+      const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+      let id = '';
+      for (let i = 0; i < length; i++) {
+          id += chars.charAt(Math.floor(Math.random() * chars.length));
+      }
+      return id;
+  }
 
-function loadMessages() {
-    const messages = JSON.parse(localStorage.getItem(chatID) || '[]');
-    messagesDiv.innerHTML = '';
-    messages.forEach(msg => {
-        const div = document.createElement('div');
-        div.className = 'message';
-        div.innerHTML = `<strong>${msg.title}</strong><br>${msg.text}`;
-        if (msg.image) {
-            const img = document.createElement('img');
-            img.src = msg.image;
-            div.appendChild(img);
-        }
-        messagesDiv.appendChild(div);
-    });
-    messagesDiv.scrollTop = messagesDiv.scrollHeight;
-}
+  // Get chat ID from hash
+  let chatID = location.hash.slice(1);
+  if (!chatID) {
+      chatID = generateID();
+      location.hash = chatID;
+  }
 
-document.getElementById('sendBtn').addEventListener('click', () => {
-    const title = document.getElementById('title').value.trim();
-    const text = document.getElementById('text').value.trim();
-    const image = document.getElementById('image').value.trim();
-    if (!text && !image) return;
+  const link = document.getElementById('chatLink');
+  link.href = `#${chatID}`;
+  link.textContent = `${link.href}`;
 
-    const messages = JSON.parse(localStorage.getItem(chatID) || '[]');
-    messages.push({ title, text, image });
-    localStorage.setItem(chatID, JSON.stringify(messages));
+  const messagesDiv = document.getElementById('messages');
+  const titleInput = document.getElementById('title');
+  const textInput = document.getElementById('text');
+  const imageInput = document.getElementById('image');
 
-    document.getElementById('title').value = '';
-    document.getElementById('text').value = '';
-    document.getElementById('image').value = '';
-    loadMessages();
-});
+  let messagesRef = ref(db, 'chats/' + chatID);
 
-document.getElementById('newChatBtn').addEventListener('click', () => {
-    chatID = generateID();
-    location.hash = chatID;
-    localStorage.setItem(chatID, JSON.stringify([]));
-    loadMessages();
-    link.href = `#${chatID}`;
-    link.textContent = `This chat link: ${link.href}`;
-});
+  // Load messages in real-time
+  function loadMessages() {
+      onValue(messagesRef, (snapshot) => {
+          const data = snapshot.val() || {};
+          messagesDiv.innerHTML = '';
+          Object.values(data).forEach(msg => {
+              const div = document.createElement('div');
+              div.className = 'message';
+              div.innerHTML = `<strong>${msg.title}</strong><br>${msg.text}`;
+              if (msg.image) {
+                  const img = document.createElement('img');
+                  img.src = msg.image;
+                  div.appendChild(img);
+              }
+              messagesDiv.appendChild(div);
+          });
+          messagesDiv.scrollTop = messagesDiv.scrollHeight;
+      });
+  }
 
-setInterval(loadMessages, 2000);
+  loadMessages();
 
-loadMessages();
+  // ---------------- Send Message ----------------
+  document.getElementById('sendBtn').addEventListener('click', () => {
+      const title = titleInput.value.trim();
+      const text = textInput.value.trim();
+      const image = imageInput.value.trim();
+      if (!text && !image) return;
+
+      push(messagesRef, { title, text, image });
+
+      titleInput.value = '';
+      textInput.value = '';
+      imageInput.value = '';
+  });
+
+  // ---------------- New Chat ----------------
+  document.getElementById('newChatBtn').addEventListener('click', () => {
+      chatID = generateID();
+      location.hash = chatID;
+      messagesRef = ref(db, 'chats/' + chatID);
+      link.href = `#${chatID}`;
+      link.textContent = `${link.href}`;
+      loadMessages();
+  });
+
+  // ---------------- Refresh Button ----------------
+  document.getElementById('refreshBtn').addEventListener('click', () => {
+      loadMessages();
+  });
+
 </script>
+
 </body>
 </html>
