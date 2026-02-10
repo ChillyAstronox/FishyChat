@@ -77,12 +77,32 @@ button { padding: 5px 10px; }
 
   let messagesRef = db.ref('chats/' + chatID);
 
+  // ---------------- Sounds ----------------
+  const sendSound = new Audio(); // sound when sending
+  sendSound.src = "send.mp3"; // sound on send
+  const receiveSound = new Audio(); // sound on new message
+  receiveSound.src = "receive.mp3"; // sound on new message
+
+  let lastMessageCount = 0;
+
   // ---------------- Load messages live ----------------
   function loadMessages() {
       messagesRef.on('value', snapshot => {
           const data = snapshot.val() || {};
+          const messagesArray = Object.values(data);
+
+          // Play sound if new message added
+          if (messagesArray.length > lastMessageCount) {
+              // Avoid playing sound for messages sent by this user immediately
+              const lastMessage = messagesArray[messagesArray.length - 1];
+              if (!(lastMessage.title === titleInput.value.trim() && lastMessage.text === textInput.value.trim())) {
+                  receiveSound.play();
+              }
+          }
+          lastMessageCount = messagesArray.length;
+
           messagesDiv.innerHTML = '';
-          Object.values(data).forEach(msg => {
+          messagesArray.forEach(msg => {
               const div = document.createElement('div');
               div.className = 'message';
               div.innerHTML = `<strong>${msg.title}</strong><br>${msg.text}`;
@@ -111,6 +131,8 @@ button { padding: 5px 10px; }
       titleInput.value = '';
       textInput.value = '';
       imageInput.value = '';
+
+      sendSound.play(); // play sound when sending
   });
 
   // ---------------- New Chat ----------------
@@ -121,6 +143,7 @@ button { padding: 5px 10px; }
       link.href = `#${chatID}`;
       link.textContent = `${link.href}`;
       loadMessages();
+      lastMessageCount = 0; // reset counter for new chat
   });
 
 </script>
