@@ -13,7 +13,7 @@ input { margin: 5px; padding: 5px; }
 button { padding: 5px 10px; }
 </style>
 </head>
-<body>
+<body style="background-image: linear-gradient(rgb(85, 85, 158), rgb(229, 232, 236));">
 
 <h1 id="chatTitle" style="font-size: 80px; font-family: cursive;">
 <img src="image.png" alt="Fish Chat" style="width: 220px; height: 170px;"> Fishy Chat :)
@@ -21,14 +21,54 @@ button { padding: 5px 10px; }
 
 <div id="messages"></div>
 
-<input type="text" id="title" placeholder="Name" style="width: 200px;">
-<input type="text" id="text" placeholder="Message" style="width: 300px;">
-<input type="text" id="image" placeholder="Image URL" style="width: 200px;">
+<input type="text" id="title" placeholder="Name (Optional)" style="width: 200px; border-radius: 5px;">
+<input type="text" id="text" placeholder="Message (Required unless sending image)" style="width: 300px; border-radius: 5px;">
+<input type="text" id="image" placeholder="Image URL (Optional)" style="width: 200px; border-radius: 5px;">
 <br>
-<button id="sendBtn">Send</button>
-<button id="newChatBtn">Start New Room</button>
+<button id="sendBtn" style="background-color: rgb(36, 45, 129); color: white; width: 500px;">Send</button>
+<button id="newChatBtn" style="background-color: rgb(202, 149, 36); color: white; width: 275px;" onclick="playNewSound()"></button>
 <br>
-<a id="chatLink" href="#" target="_blank"></a>
+<a id="chatLink" href="#" target="_blank" style="background-color: #00000034; color: white;">Share This Link:</a>
+<br>
+<ul style="margin-top: 50px; font-size: 14px; color: #555;" id="tip">Tip: Loading...</ul>
+<ul style="margin-top: 50px; font-size: 14px; color: #555;">
+    <h1>Terms of Service</h1>
+    <p>By using Fishy Chat, you agree to the following terms:</p>
+    <ul>
+        <li>You are not responsible for anything you post except for the ones who complain!</li>
+        <li>We do not permit use of ai on our platform.</li>
+        <li>Respect others and be sorta of kind.</li>
+        <li>Fishy Chat is for everyone!</li>
+        <li>You're sorta safe here!</li>
+        <li>You are under the age of 6/7? You are not allowed to use Fishy Chat!</li>
+        <li>Remember to have fun and be sorta kind!</li>
+        <li>Must chant the official Fishy Chat Chant!</li>
+    </ul>
+</ul>
+<ul style="margin-top: 50px; font-size: 14px; color: #555;">
+    <h1>Official Fishy Chat Chant</h1>
+    <p>By using Fishy Chat, you agree to chanting these sentences:</p>
+    Created by your heathy friend, Fishy! <br>
+    Need to chat about your feelings? Or just want to share some memes? Fishy Chat is here for you! <br>
+    Just share the link with your friends and start chatting! <br>
+    Depressed? fishy chat is here to help! <br>
+    Stage 5 cancer? Fishy chat can help with that too! <br>
+    One week left to live? Fishy chat is a great place to spend your last moments! <br>
+    Remember, Fishy Chat is not just a chat, it's a community of support and laughter! <br>
+    Don't forget fishey is uncensored, so you can say whatever you want without fear of being judged! <br>
+    Fishy chat is completely anonymous, so you can be yourself without worrying about your identity being revealed! <br>
+    You can share your deepest secrets, your wildest dreams, or just your daily thoughts without any fear of judgment! <br>
+    You can talk about fish or anything else you want! Fishy chat is a safe space for everyone! <br>
+    You can trust Fishy chat to keep your conversations private and secure! <a style="font-size: 4px;">This is all lies except the ones about helping you of course!</a><br>
+</ul>
+<ul style="margin-top: 50px; font-size: 14px; color: #555;">
+    <h1>Fishy Pics</h1>
+    <img src="fish_images/1.png" style="border-radius: 5px; width: 100px; height: 100px; scale: 1;">
+    <img src="fish_images/2.png" style="border-radius: 5px; width: 100px; height: 100px; scale: 1;">
+    <img src="fish_images/3.png" style="border-radius: 5px; width: 100px; height: 100px; scale: 1;">
+    <img src="fish_images/4.png" style="border-radius: 5px; width: 100px; height: 100px; scale: 1;">
+    <img src="fish_images/5.png" style="border-radius: 5px; width: 100px; height: 100px; scale: 1;">
+</ul>
 
 <!-- Firebase Compat Scripts -->
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
@@ -68,7 +108,7 @@ button { padding: 5px 10px; }
 
   const link = document.getElementById('chatLink');
   link.href = `#${chatID}`;
-  link.textContent = `${link.href}`;
+  link.textContent = `Share this link: ${link.href}`;
 
   const messagesDiv = document.getElementById('messages');
   const titleInput = document.getElementById('title');
@@ -82,6 +122,12 @@ button { padding: 5px 10px; }
   sendSound.src = "send.mp3"; // sound on send
   const receiveSound = new Audio(); // sound on new message
   receiveSound.src = "receive.mp3"; // sound on new message
+  const newSound = new Audio(); // sound on new room
+  newSound.src = "new.mp3"; // sound on new room
+
+  function playNewSound() {
+      newSound.play();
+  }
 
   let lastMessageCount = 0;
 
@@ -128,6 +174,10 @@ button { padding: 5px 10px; }
 
       messagesRef.push({ title, text, image });
 
+      if (textInput.value === '#fishyonme') {
+          document.location.href = 'https://www.myinstants.com/media/sounds/tiko-fishy-on-me-official-music-video-mp3cut-mp3cut.mp3';
+      }
+
       titleInput.value = '';
       textInput.value = '';
       imageInput.value = '';
@@ -141,10 +191,27 @@ button { padding: 5px 10px; }
       location.hash = chatID;
       messagesRef = db.ref('chats/' + chatID);
       link.href = `#${chatID}`;
-      link.textContent = `${link.href}`;
+      link.textContent = `Share this link: ${link.href}`;
+      document.title = `Fishy Chat - ${chatID}`;
+      document.getElementById('newChatBtn').textContent = 'Start New Room';
       loadMessages();
       lastMessageCount = 0; // reset counter for new chat
   });
+
+document.getElementById('newChatBtn').textContent = 'Start New Room';
+document.title = `Fishy Chat - ${chatID}`;
+
+const tip = document.getElementById('tip');
+const tips = [
+    "Tip: Share the chat link with your friends to start chatting together!",
+    "Tip: You can send images by pasting the image URL in the image input field.",
+    "Tip: Use the 'Start New Room' button to create a new chat room for different conversations!",
+    "Tip: Type #fishyonme in the message box and press send to get a surprise!"
+];
+setInterval(() => {
+    const randomTip = tips[Math.floor(Math.random() * tips.length)];
+    tip.textContent = randomTip;
+}, 5000);
 
 </script>
 </body>
